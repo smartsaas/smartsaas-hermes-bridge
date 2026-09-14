@@ -1,0 +1,24 @@
+name: smartsaas
+label: SmartSaaS
+kind: platform
+version: 1.0.0
+description: Bridge Hermes Agent to SmartSaaS messaging and orchestrator (Telegram-style platform adapter).
+author: SmartSaaS
+requires_env:
+  - name: SMARTSAAS_BASE_URL
+    description: SmartSaaS API base URL (e.g. https://api.smartsaas.pro)
+    prompt: SmartSaaS base URL
+    password: false
+  - name: SMARTSAAS_BRIDGE_TOKEN
+    description: Bridge token from SmartSaaS Integrations → Hermes (or Agent deploy modal)
+    prompt: Bridge token
+    password: true
+optional_env:
+  - name: SMARTSAAS_API_KEY
+    description: Optional protected API key so the smartsaas skill can call product APIs
+    prompt: SmartSaaS API key
+    password: true
+  - name: SMARTSAAS_POLL_SECONDS
+    description: Long-poll interval when the bridge is idle (default 25)
+    prompt: Poll seconds
+    password: false

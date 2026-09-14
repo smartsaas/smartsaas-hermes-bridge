@@ -1,0 +1,321 @@
+{
+  "version": "1.0.0",
+  "description": "Validation/type normalization and enrichment rules for default_schemas.schemaContent.",
+  "typeAliases": {
+    "text": "string",
+    "textarea": "string",
+    "multiline": "string",
+    "dropDown": "dropdown",
+    "select": "dropdown",
+    "phone": "phone",
+    "mobile": "phone",
+    "Phone": "phone",
+    "Mobile": "phone",
+    "url": "url",
+    "website": "url",
+    "datetime": "datetime",
+    "dateTime": "datetime",
+    "daterange": "daterange",
+    "dateRange": "daterange"
+  },
+  "supportedTypes": [
+    "string",
+    "number",
+    "email",
+    "password",
+    "url",
+    "phone",
+    "date",
+    "datetime",
+    "daterange",
+    "boolean",
+    "checkbox",
+    "multicheck",
+    "dropdown",
+    "country",
+    "currency",
+    "price",
+    "slider",
+    "timeslider",
+    "color",
+    "image",
+    "images",
+    "tags",
+    "barcode",
+    "city",
+    "address",
+    "location",
+    "object",
+    "group",
+    "dataset",
+    "product_select",
+    "data_items",
+    "template_select",
+    "crm_item_select",
+    "customer_datas",
+    "team",
+    "user_stores",
+    "user_select",
+    "sign"
+  ],
+  "defaultValidationByType": {
+    "string": {
+      "required": true,
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "number": {
+      "required": true
+    },
+    "email": {
+      "required": true,
+      "type": "email",
+      "placeHolder": "name@company.com"
+    },
+    "phone": {
+      "required": true,
+      "type": "phone",
+      "minLength": 10,
+      "maxLength": 15,
+      "placeHolder": "+1 555 555 5555"
+    },
+    "url": {
+      "required": false,
+      "type": "url",
+      "placeHolder": "https://example.com"
+    },
+    "price": {
+      "required": true,
+      "minValue": 0
+    },
+    "date": {
+      "required": true,
+      "type": "date"
+    },
+    "datetime": {
+      "required": true,
+      "type": "datetime"
+    },
+    "dropdown": {
+      "required": true
+    },
+    "multicheck": {
+      "required": false
+    },
+    "boolean": {
+      "required": false
+    }
+  },
+  "contentDefaultsByType": {
+    "string": {},
+    "email": {
+      "placeHolder": "name@company.com"
+    },
+    "phone": {
+      "placeHolder": "+1 555 555 5555"
+    },
+    "price": {
+      "showCurrency": true
+    }
+  },
+  "titleHeuristics": [
+    {
+      "matchAny": [
+        "email",
+        "e-mail"
+      ],
+      "assignType": "email"
+    },
+    {
+      "matchAny": [
+        "phone",
+        "mobile",
+        "telephone",
+        "contact number",
+        "whatsapp"
+      ],
+      "assignType": "phone"
+    },
+    {
+      "matchAny": [
+        "price",
+        "amount",
+        "cost",
+        "fee",
+        "budget"
+      ],
+      "assignType": "price"
+    },
+    {
+      "matchAny": [
+        "website",
+        "url",
+        "link"
+      ],
+      "assignType": "url"
+    },
+    {
+      "matchAny": [
+        "date",
+        "due",
+        "deadline",
+        "start",
+        "end",
+        "reported"
+      ],
+      "assignType": "date"
+    },
+    {
+      "matchAny": [
+        "status"
+      ],
+      "assignType": "dropdown",
+      "validationOverrides": {
+        "enum": [
+          "open",
+          "in_progress",
+          "resolved",
+          "closed"
+        ]
+      }
+    },
+    {
+      "matchAny": [
+        "priority"
+      ],
+      "assignType": "dropdown",
+      "validationOverrides": {
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "urgent"
+        ]
+      }
+    },
+    {
+      "matchAny": [
+        "description",
+        "notes",
+        "comment",
+        "details",
+        "summary"
+      ],
+      "assignType": "string",
+      "fieldOverrides": {
+        "ref": "multiline"
+      }
+    }
+  ],
+  "schemaEnrichments": {
+    "products": [
+      {
+        "title": "SKU",
+        "type": "string",
+        "validation": {
+          "required": false,
+          "maxLength": 80
+        }
+      },
+      {
+        "title": "Stock Quantity",
+        "type": "number",
+        "validation": {
+          "required": false,
+          "minValue": 0
+        }
+      }
+    ],
+    "services": [
+      {
+        "title": "Service Category",
+        "type": "dropdown",
+        "validation": {
+          "required": false,
+          "enum": [
+            "consulting",
+            "support",
+            "implementation",
+            "subscription",
+            "other"
+          ]
+        }
+      }
+    ],
+    "tickets_support": [
+      {
+        "title": "Due Date",
+        "type": "date",
+        "validation": {
+          "required": false,
+          "type": "date"
+        }
+      },
+      {
+        "title": "Category",
+        "type": "dropdown",
+        "validation": {
+          "required": false,
+          "enum": [
+            "bug",
+            "feature_request",
+            "billing",
+            "account",
+            "other"
+          ]
+        }
+      }
+    ],
+    "customers_crm": [
+      {
+        "title": "Customer Status",
+        "type": "dropdown",
+        "validation": {
+          "required": false,
+          "enum": [
+            "lead",
+            "prospect",
+            "customer",
+            "inactive"
+          ]
+        }
+      },
+      {
+        "title": "Website",
+        "type": "url",
+        "validation": {
+          "required": false,
+          "type": "url"
+        }
+      }
+    ]
+  },
+  "matchSchemaTitleRules": [
+    {
+      "containsAny": [
+        "product"
+      ],
+      "enrichmentKey": "products"
+    },
+    {
+      "containsAny": [
+        "service"
+      ],
+      "enrichmentKey": "services"
+    },
+    {
+      "containsAny": [
+        "ticket",
+        "support"
+      ],
+      "enrichmentKey": "tickets_support"
+    },
+    {
+      "containsAny": [
+        "customer",
+        "crm"
+      ],
+      "enrichmentKey": "customers_crm"
+    }
+  ]
+}
