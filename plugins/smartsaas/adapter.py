@@ -57,6 +57,8 @@ class SmartSaaSAdapter(BasePlatformAdapter):
         self._stop = asyncio.Event()
         # chat_id → correlationId for session chat waiters
         self._pending_correlations: dict[str, str] = {}
+        # FIFO fallback when Hermes remaps chat_id to home channel (e.g. "hermes")
+        self._pending_correlation_fifo: list[str] = []
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -172,6 +174,7 @@ class SmartSaaSAdapter(BasePlatformAdapter):
 
         if correlation_id:
             self._pending_correlations[chat_id] = correlation_id
+            self._pending_correlation_fifo.append(correlation_id)
 
         logger.info(
             "[smartsaas] ingest chat_id=%s user_id=%s corr=%s text=%s",
@@ -241,6 +244,17 @@ class SmartSaaSAdapter(BasePlatformAdapter):
             )
         if not correlation_id:
             correlation_id = self._pending_correlations.pop(str(chat_id), None)
+        if not correlation_id and self._pending_correlation_fifo:
+            # Home-channel remaps (ID: hermes) must still complete SmartSaaS waiters.
+            correlation_id = self._pending_correlation_fifo.pop(0)
+            for key, value in list(self._pending_correlations.items()):
+                if value == correlation_id:
+                    self._pending_correlations.pop(key, None)
+                    break
+        elif correlation_id and correlation_id in self._pending_correlation_fifo:
+            self._pending_correlation_fifo = [
+                c for c in self._pending_correlation_fifo if c != correlation_id
+            ]
         if correlation_id:
             body["correlationId"] = str(correlation_id)
 
