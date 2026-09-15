@@ -65,7 +65,7 @@ class SmartSaaSAdapter(BasePlatformAdapter):
             "Authorization": f"Bearer {self.bridge_token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": "smartsaas-hermes-bridge/1.0",
+            "User-Agent": "smartsaas-hermes-bridge/1.0.2",
         }
 
     async def connect(self, *, is_reconnect: bool = False) -> bool:
@@ -173,6 +173,9 @@ class SmartSaaSAdapter(BasePlatformAdapter):
             text = f"[SmartSaaS orchestrator] {title}\n\n{text}"
 
         if correlation_id:
+            # New user turn: drop prior ids so multi-bubble replies stay on this turn.
+            self._pending_correlations.clear()
+            self._pending_correlation_fifo.clear()
             self._pending_correlations[chat_id] = correlation_id
             self._pending_correlation_fifo.append(correlation_id)
 
@@ -222,11 +225,13 @@ class SmartSaaSAdapter(BasePlatformAdapter):
             return SendResult(success=False, error="not_connected")
 
         url = f"{self.base_url}/api/protected/hermes/bridge/reply"
+        # done:false — Hermes may emit several send() bubbles per turn; SmartSaaS
+        # Easy Mode / chat panels end the turn on idle after the last bubble.
         body: dict[str, Any] = {
             "chatId": str(chat_id),
             "conversationId": str(chat_id),
             "message": content if isinstance(content, str) else str(content),
-            "done": True,
+            "done": False,
         }
         if reply_to:
             body["replyTo"] = str(reply_to)
@@ -242,19 +247,11 @@ class SmartSaaSAdapter(BasePlatformAdapter):
                 ss.get("correlationId")
                 or metadata.get("correlationId")
             )
+        # Peek (do not pop) so every bubble in the turn keeps the same correlationId.
         if not correlation_id:
-            correlation_id = self._pending_correlations.pop(str(chat_id), None)
+            correlation_id = self._pending_correlations.get(str(chat_id))
         if not correlation_id and self._pending_correlation_fifo:
-            # Home-channel remaps (ID: hermes) must still complete SmartSaaS waiters.
-            correlation_id = self._pending_correlation_fifo.pop(0)
-            for key, value in list(self._pending_correlations.items()):
-                if value == correlation_id:
-                    self._pending_correlations.pop(key, None)
-                    break
-        elif correlation_id and correlation_id in self._pending_correlation_fifo:
-            self._pending_correlation_fifo = [
-                c for c in self._pending_correlation_fifo if c != correlation_id
-            ]
+            correlation_id = self._pending_correlation_fifo[0]
         if correlation_id:
             body["correlationId"] = str(correlation_id)
 
